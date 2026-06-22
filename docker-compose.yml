@@ -1,0 +1,23 @@
+services:
+  yamld:
+    build: .
+    container_name: yamld
+    restart: unless-stopped
+    environment:
+      - PORTAINER_URL=https://portainer.devc-vps.duckdns.org
+      - PORTAINER_API_KEY=PASTE_YOUR_PORTAINER_API_KEY_HERE
+      - AUTH_USER=cayden
+      - AUTH_PASS=CHOOSE_A_REAL_PASSWORD_HERE
+    networks:
+      - coolify
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.yamld.rule=Host(`yamld.devc-vps.duckdns.org`)
+      - traefik.http.routers.yamld.entrypoints=https
+      - traefik.http.routers.yamld.tls=true
+      - traefik.http.routers.yamld.tls.certresolver=letsencrypt
+      - traefik.http.services.yamld.loadbalancer.server.port=8800
+
+networks:
+  coolify:
+    external: true

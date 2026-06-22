@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>yamld</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-raised: #1c2230;
+    --border: #2a3142;
+    --mint: #39d98a;
+    --mint-dim: #1f6b48;
+    --text: #c9d1d9;
+    --muted: #6e7681;
+    --danger: #f25555;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  header {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(13, 17, 23, 0.92);
+    backdrop-filter: blur(8px);
+    z-index: 20;
+  }
+  .brand-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 19px;
+  }
+  .brand-mark::before { content: "~/ "; color: var(--mint); }
+  .brand-tag {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  main {
+    padding: 16px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 12px;
+    font-weight: 600;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  input[type="text"], input[type="password"], input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 11px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+  input:focus { outline: 2px solid var(--mint); outline-offset: 1px; border-color: var(--mint); }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  .image-field-wrap { position: relative; }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: -8px;
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  .domain-hint { margin-top: -8px; margin-bottom: 14px; font-size: 12px; color: var(--mint); font-family: 'JetBrains Mono', monospace; }
+
+  button.primary, button.secondary {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 8px;
+    padding: 13px 16px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+  button.primary { background: var(--mint); color: #07150e; }
+  button.primary:active { transform: scale(0.98); }
+  button.primary:disabled { opacity: 0.5; }
+  button.secondary { background: var(--panel-raised); color: var(--text); border: 1px solid var(--border); }
+
+  /* search dropdown */
+  .search-results {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-raised);
+    margin-top: -10px;
+    margin-bottom: 14px;
+    max-height: 260px;
+    overflow-y: auto;
+    display: none;
+  }
+  .search-results.open { display: block; }
+  .search-result {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .search-result:last-child { border-bottom: none; }
+  .search-result:active { background: var(--bg); }
+  .sr-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+  .sr-official { color: var(--mint); font-size: 10px; margin-left: 6px; text-transform: uppercase; }
+  .sr-desc { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .sr-stars { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+
+  .preview-wrap {
+    background: #090c10;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .preview-wrap.open { display: block; }
+  .preview-titlebar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot.r { background: #f25555; }
+  .dot.y { background: #f0883e; }
+  .dot.g { background: #39d98a; }
+  pre#yamlPreview {
+    margin: 0; padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 300px; overflow-y: auto;
+  }
+
+  #toast {
+    position: fixed; left: 16px; right: 16px; bottom: 18px;
+    padding: 13px 16px; border-radius: 10px;
+    font-size: 13px; font-weight: 500;
+    transform: translateY(80px); opacity: 0;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    z-index: 50; max-width: 560px; margin: 0 auto;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.ok { background: var(--mint); color: #07150e; }
+  #toast.err { background: var(--danger); color: #fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-mark">yamld</div>
+  <div class="brand-tag">deploy to portainer · devc-vps.duckdns.org</div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>new deployment</h2>
+
+    <label for="nameInput">project name</label>
+    <input type="text" id="nameInput" placeholder="my-bot" />
+
+    <label for="imageInput">docker image</label>
+    <div class="image-field-wrap">
+      <input type="text" id="imageInput" class="mono" placeholder="search or type an image…" autocomplete="off" />
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <label for="portInput">container port</label>
+    <input type="number" id="portInput" placeholder="8080" />
+
+    <label for="domainInput">subdomain</label>
+    <input type="text" id="domainInput" placeholder="my-bot" />
+    <div class="domain-hint" id="domainPreview">→ my-bot.devc-vps.duckdns.org</div>
+
+    <label for="authUserInput">basic auth username <span style="color:var(--muted);">(optional)</span></label>
+    <input type="text" id="authUserInput" placeholder="leave blank for no auth" />
+
+    <label for="authPassInput">basic auth password <span style="color:var(--muted);">(optional)</span></label>
+    <input type="text" id="authPassInput" placeholder="leave blank for no auth" />
+
+    <div class="row">
+      <button class="secondary" id="btnPreview">Preview YAML</button>
+      <button class="primary" id="btnDeploy">Deploy</button>
+    </div>
+  </div>
+
+  <div class="preview-wrap" id="previewWrap">
+    <div class="preview-titlebar">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span style="margin-left:4px;">generated compose</span>
+    </div>
+    <pre id="yamlPreview" class="mono"></pre>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const nameInput = document.getElementById('nameInput');
+const imageInput = document.getElementById('imageInput');
+const portInput = document.getElementById('portInput');
+const domainInput = document.getElementById('domainInput');
+const authUserInput = document.getElementById('authUserInput');
+const authPassInput = document.getElementById('authPassInput');
+const domainPreview = document.getElementById('domainPreview');
+const searchResults = document.getElementById('searchResults');
+
+function toast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = ok ? 'ok show' : 'err show';
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// auto-fill subdomain from project name, unless user has typed their own
+let domainTouched = false;
+domainInput.addEventListener('input', () => { domainTouched = true; updateDomainPreview(); });
+nameInput.addEventListener('input', () => {
+  if (!domainTouched) domainInput.value = slugify(nameInput.value);
+  updateDomainPreview();
+});
+
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function updateDomainPreview() {
+  const sub = domainInput.value.trim() || slugify(nameInput.value) || 'app';
+  domainPreview.textContent = '→ ' + sub + '.devc-vps.duckdns.org';
+}
+
+// ---------- Docker Hub search ----------
+let searchTimer = null;
+imageInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  const q = imageInput.value.trim();
+  if (q.length < 2) {
+    searchResults.classList.remove('open');
+    return;
+  }
+  searchTimer = setTimeout(() => doSearch(q), 350);
+});
+
+imageInput.addEventListener('focus', () => {
+  if (searchResults.children.length > 0) searchResults.classList.add('open');
+});
+
+document.addEventListener('click', (e) => {
+  if (!searchResults.contains(e.target) && e.target !== imageInput) {
+    searchResults.classList.remove('open');
+  }
+});
+
+async function doSearch(q) {
+  try {
+    const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+    if (!res.ok) throw new Error(res.status);
+    const results = await res.json();
+    renderSearchResults(results);
+  } catch (e) {
+    searchResults.classList.remove('open');
+  }
+}
+
+function renderSearchResults(results) {
+  if (!results || results.length === 0) {
+    searchResults.classList.remove('open');
+    return;
+  }
+  searchResults.innerHTML = '';
+  results.slice(0, 12).forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'search-result';
+    el.innerHTML = `<div><span class="sr-name">${escapeHtml(r.name)}</span>${r.is_official ? '<span class="sr-official">official</span>' : ''}</div>
+      <div class="sr-desc">${escapeHtml(r.description || 'No description')}</div>
+      <div class="sr-stars">★ ${r.star_count}</div>`;
+    el.addEventListener('click', () => {
+      imageInput.value = r.name + ':latest';
+      searchResults.classList.remove('open');
+      if (!nameInput.value) {
+        nameInput.value = r.name.split('/').pop();
+        if (!domainTouched) domainInput.value = slugify(nameInput.value);
+        updateDomainPreview();
+      }
+    });
+    searchResults.appendChild(el);
+  });
+  searchResults.classList.add('open');
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ---------- Build request payload ----------
+function buildPayload() {
+  const domain = (domainInput.value.trim() || slugify(nameInput.value)) + '.devc-vps.duckdns.org';
+  return {
+    name: nameInput.value.trim(),
+    image: imageInput.value.trim(),
+    port: parseInt(portInput.value) || 8080,
+    domain: domain,
+    auth_user: authUserInput.value.trim() || null,
+    auth_password: authPassInput.value.trim() || null,
+  };
+}
+
+function validate() {
+  if (!nameInput.value.trim()) { toast('Give it a project name', false); return false; }
+  if (!imageInput.value.trim()) { toast('Pick or type a docker image', false); return false; }
+  if (!portInput.value) { toast('Set the container port', false); return false; }
+  return true;
+}
+
+// ---------- Preview ----------
+document.getElementById('btnPreview').addEventListener('click', async () => {
+  if (!validate()) return;
+  const payload = buildPayload();
+  // build preview client-side mirror of server logic, for instant feedback
+  const slug = slugify(payload.name) || 'app';
+  let labels = [
+    '      - traefik.enable=true',
+    `      - traefik.http.routers.${slug}.rule=Host(\`${payload.domain}\`)`,
+    `      - traefik.http.routers.${slug}.entrypoints=https`,
+    `      - traefik.http.routers.${slug}.tls=true`,
+    `      - traefik.http.routers.${slug}.tls.certresolver=letsencrypt`,
+    `      - traefik.http.services.${slug}.loadbalancer.server.port=${payload.port}`,
+  ];
+  if (payload.auth_user && payload.auth_password) {
+    labels.push(`      - traefik.http.routers.${slug}.middlewares=${slug}-auth`);
+    labels.push(`      - traefik.http.middlewares.${slug}-auth.basicauth.users=${payload.auth_user}:<hash generated on deploy>`);
+  }
+  const yaml = `services:\n  ${slug}:\n    image: ${payload.image}\n    container_name: ${slug}\n    restart: unless-stopped\n    networks:\n      - coolify\n    labels:\n${labels.join('\n')}\n\nnetworks:\n  coolify:\n    external: true`;
+  document.getElementById('yamlPreview').textContent = yaml;
+  document.getElementById('previewWrap').classList.add('open');
+});
+
+// ---------- Deploy ----------
+document.getElementById('btnDeploy').addEventListener('click', async () => {
+  if (!validate()) return;
+  const payload = buildPayload();
+  const btn = document.getElementById('btnDeploy');
+  btn.disabled = true;
+  btn.textContent = 'Deploying…';
+
+  try {
+    const res = await fetch('/api/deploy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.compose) {
+      document.getElementById('yamlPreview').textContent = data.compose;
+      document.getElementById('previewWrap').classList.add('open');
+    }
+    if (res.ok && data.success) {
+      toast(data.message);
+    } else {
+      toast(data.message || 'Deploy failed', false);
+    }
+  } catch (e) {
+    toast('Network error — ' + e.message, false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Deploy';
+  }
+});
+
+updateDomainPreview();
+</script>
+</body>
+</html>
